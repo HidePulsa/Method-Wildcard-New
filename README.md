@@ -359,7 +359,7 @@ Tinggal implementasiin flow: **cek DNS → set fallback → bikin hostname → c
 
 Method ini gratis. Kalo terbantu, boleh traktir kopi ☕
 
-![QRIS](./images/qris-donate.png)
+![QRIS](./images/qris-donate.jpg)
 
 ---
 
