@@ -353,6 +353,16 @@ Tinggal implementasiin flow: **cek DNS → set fallback → bikin hostname → c
 
 ---
 
+---
+
+## ☕ Support
+
+Method ini gratis. Kalo terbantu, boleh traktir kopi ☕
+
+![QRIS](./images/qris-donate.png)
+
+---
+
 ## Limit & Biaya
 
 | Item | Free | Berbayar |
