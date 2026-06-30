@@ -35,6 +35,8 @@ Generate CC lengkap di [chckr.cc](https://chckr.cc) atau [namso-gen.com](https:/
 
 ## STEP 1: Tambah Payment Method
 
+> **Navigasi:** Dashboard → **Billing** (menu kiri) → **Payment Methods**
+
 1. Buka `https://dash.cloudflare.com/<ACCOUNT_ID>/billing/payment`
 2. Klik **Add Payment Method**
 3. Pilih Credit Card / PayPal 
@@ -70,7 +72,8 @@ Proxy: OFF (abu-abu)
 > ⚡ Record `*` bikin semua subdomain auto-resolve ke VPS. Ga perlu tambah DNS lagi per hostname.
 
 ### 2b. Set Fallback Origin di Custom Hostnames
-**SSL/TLS → Custom Hostnames**
+
+> **Navigasi:** Klik domain → **SSL/TLS** (menu kiri) → **Custom Hostnames**
 
 Isi form:
 ```
@@ -114,12 +117,32 @@ nginx -t && systemctl reload nginx
 
 ---
 
-## STEP 4: Bikin Custom Hostname via API
+## STEP 4: Bikin Custom Hostname (2 cara)
 
-### 4a. Dapatkan API Token
+### Cara A — Via Web UI (gampang, TXT validation)
+
+> **Navigasi:** Klik domain → **SSL/TLS** → **Custom Hostnames**
+
+1. Klik **Add Custom Hostname**
+2. Isi:
+   - **Custom Hostname:** `support.zoom.us.domain-anda.my.id`
+   - **Minimum TLS:** `1.2`
+   - **Certificate validation method:** `TXT Validation`
+   - **SSL certificate authority:** `Google Trust Services`
+3. Klik **Add Hostname**
+4. Cloudflare kasih 2 TXT record → tambahin di **DNS → Records**
+5. Tunggu validasi 2-5 menit → status jadi **Active**
+
+> ⚠️ TXT method ribet karena tiap hostname harus tambah 2 DNS record manual. Mending pake Cara B.
+
+### Cara B — Via API (otomatis, HTTP validation)
+
+#### 4a. Dapatkan API Token
 1. **Profile (ikon user)** → **API Tokens**
-2. **Create Token** → pilih template **"Edit zone DNS"**
-3. Permission: `Zone:SSL and Certificates:Edit` + `Zone:DNS:Edit`
+2. **Create Token** → **Create Custom Token**
+3. Permission:
+   - `Zone → DNS → Edit`
+   - `Zone → SSL and Certificates → Edit`
 4. Zone Resources: Include → Specific zone → `domain-anda.my.id`
 5. Copy token
 
