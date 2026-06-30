@@ -205,24 +205,133 @@ curl -X GET "https://api.cloudflare.com/client/v4/zones/$ZONE_ID/custom_hostname
 
 ---
 
+## API Endpoints yang Dipake
+
+### Flow:
+
+```
+1. GET  /zones/:zone/dns_records          → cek record "fallback"
+      POST /zones/:zone/dns_records       → bikin kalo belum ada
+2. PUT  /zones/:zone/custom_hostnames/fallback_origin → set fallback
+3. POST /zones/:zone/custom_hostnames     → bikin custom hostname (HTTP)
+4. GET  /zones/:zone/custom_hostnames/:id → cek status certificate
+5. GET  /zones/:zone/custom_hostnames     → list semua hostname
+```
+
+### Request & Response:
+
+**1. Cek/Tambah DNS Record:**
+```bash
+# GET — list DNS
+curl "https://api.cloudflare.com/client/v4/zones/$ZONE/dns_records" \
+  -H "Authorization: Bearer ***  -H "Content-Type: application/json"
+
+# POST — bikin record fallback
+curl -X POST "https://api.cloudflare.com/client/v4/zones/$ZONE/dns_records" \
+  -H "Authorization: Bearer ***  -H "Content-Type: application/json" \
+  -d '{"type":"A","name":"fallback","content":"<VPS_IP>","proxied":true,"ttl":1}'
+```
+
+```json
+// Response
+{ "success": true, "result": { "id": "xxx", "name": "fallback.domain.my.id", "type": "A", "content": "18.143.144.152" } }
+```
+
+**2. Set Fallback Origin:**
+```bash
+curl -X PUT "https://api.cloudflare.com/client/v4/zones/$ZONE/custom_hostnames/fallback_origin" \
+  -H "Authorization: Bearer ***  -H "Content-Type: application/json" \
+  -d '{"origin":"fallback.domain.my.id"}'
+```
+
+```json
+// Response
+{ "success": true, "result": { "origin": "fallback.domain.my.id", "status": "active" } }
+```
+
+**3. Bikin Custom Hostname (HTTP validation):**
+```bash
+curl -X POST "https://api.cloudflare.com/client/v4/zones/$ZONE/custom_hostnames" \
+  -H "Authorization: Bearer ***  -H "Content-Type: application/json" \
+  -d '{"hostname":"support.zoom.us.domain.my.id","ssl":{"method":"http","type":"dv"}}'
+```
+
+```json
+// Response
+{
+  "success": true,
+  "result": {
+    "id": "3d8e6b03-xxx",
+    "hostname": "support.zoom.us.domain.my.id",
+    "status": "pending",
+    "ssl": { "status": "pending_validation", "method": "http", "type": "dv" }
+  }
+}
+```
+
+**4. Cek Status Certificate:**
+```bash
+curl "https://api.cloudflare.com/client/v4/zones/$ZONE/custom_hostnames/$HOSTNAME_ID" \
+  -H "Authorization: Bearer ***
+```
+
+```json
+// Response (active)
+{
+  "success": true,
+  "result": {
+    "id": "3d8e6b03-xxx",
+    "hostname": "support.zoom.us.domain.my.id",
+    "status": "active",
+    "ssl": { "status": "active", "method": "http", "type": "dv" }
+  }
+}
+```
+
+**5. List Semua Custom Hostname:**
+```bash
+curl "https://api.cloudflare.com/client/v4/zones/$ZONE/custom_hostnames" \
+  -H "Authorization: Bearer ***
+```
+
+```json
+// Response
+{
+  "success": true,
+  "result": [
+    {
+      "id": "xxx",
+      "hostname": "support.zoom.us.domain.my.id",
+      "status": "active",
+      "ssl": { "status": "active" }
+    }
+  ]
+}
+```
+
+**6. Delete Custom Hostname:**
+```bash
+curl -X DELETE "https://api.cloudflare.com/client/v4/zones/$ZONE/custom_hostnames/$HOSTNAME_ID" \
+  -H "Authorization: Bearer ***
+```
+
+**7. Delete DNS Record:**
+```bash
+curl -X DELETE "https://api.cloudflare.com/client/v4/zones/$ZONE/dns_records/$RECORD_ID" \
+  -H "Authorization: Bearer ***  -H "Content-Type: application/json"
+```
+
 ---
 
-## Setup Banyak Domain
+## Otomatisasi (Bot / Web / API / Script)
 
-```
-⚠️ 1 Domain = 1 Fallback Origin. Tapi 1 VPS bisa handle semuanya.
+Endpoint di atas bisa dipake buat bikin automation lewat:
+- **Telegram Bot** (grammy/telegraf)
+- **Web Dashboard** (React/Next.js)
+- **REST API** (Express/FastAPI)
+- **CLI Script** (bash/node)
 
-Akun A → domain1.my.id → fallback.domain1.my.id ─┐
-Akun B → domain2.my.id → fallback.domain2.my.id ─┼─→ 1 VPS (nginx catch-all)
-Akun C → domain3.my.id → fallback.domain3.my.id ─┘
-```
-
-**Per domain, ulangi:**
-1. DNS: A record `fallback` → IP VPS → proxy ON
-2. SSL/TLS → Custom Hostnames → Add Fallback Origin
-3. Bikin custom hostname via API
-
-**VPS: 1x setup aja** (server_name `_` catch-all)
+Tinggal implementasiin flow: **cek DNS → set fallback → bikin hostname → cek status**.
 
 ---
 
