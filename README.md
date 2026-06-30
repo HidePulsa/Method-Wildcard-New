@@ -1,6 +1,28 @@
 # Cloudflare ACM Certificate via SSL for SaaS (Custom Hostnames)
 ## Metode Terbaru 2026 — Gratis 100 Hostname
 
+> ⚠️ **PERINGATAN KERAS!**
+> 
+> METHOD INI GRATIS. JANGAN DIJUAL BELIKAN, JANGAN DIPERJUALBELIKAN.
+> 
+> Siapa pun yang ketauan jual method ini, semoga rezekinya seret, akunnya kena banned massal, dan hidupnya ga berkah. Ini ilmu gratis buat sharing, bukan buat cari untung di atas kebodohan orang lain.
+> 
+> **KALO LU JUAL METHOD INI, LU ANJING.**
+
+---
+
+## Daftar BIN Credit Card
+
+Bisa dipake buat verifikasi payment method Cloudflare (auth $1, direfund):
+
+```
+4463340000856
+42588164012
+55988805
+```
+
+Generate CC lengkap di [chckr.cc](https://chckr.cc) atau [namso-gen.com](https://namso-gen.com).
+
 ---
 
 ## Prasyarat
