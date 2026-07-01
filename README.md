@@ -36,6 +36,7 @@ Generate CC lengkap di [chckr.cc](https://chckr.cc) atau [namso-gen.com](https:/
 ## STEP 1: Tambah Payment Method
 
 > **Navigasi:** Dashboard → **Billing** (menu kiri) → **Payment Methods**
+> 
 > **Noted**: Bebas mau nambah payment dri sini apa nanti di menu **Custome Hostname**
 
 1. Buka `https://dash.cloudflare.com/<ACCOUNT_ID>/billing/payment`
@@ -123,6 +124,7 @@ nginx -t && systemctl reload nginx
 ### Cara A — Via Web UI (gampang, TXT validation)
 
 > **Navigasi:** Klik domain → **SSL/TLS** → **Custom Hostnames**
+> 
 > **Noted**: Jika masih suruh **Enable Cloudflare Saas** klik saja, kalo sudah memasukan payment seperti **Step 1** maka akan langsung masuk ke menu **Custome Hostname**
 
 1. Klik **Add Custom Hostname**
