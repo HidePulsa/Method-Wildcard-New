@@ -7,7 +7,7 @@
 > 
 > Siapa pun yang ketauan jual method ini, semoga rezekinya seret, akunnya kena banned massal, dan hidupnya ga berkah. Ini ilmu gratis buat sharing, bukan buat cari untung di atas kebodohan orang lain.
 > 
-> **KALO LU JUAL METHOD INI, LU ANJING.**
+> **KALO LU JUAL METHOD INI, LU ANJING TITIDMU MELETOP.**
 
 ---
 
@@ -36,6 +36,7 @@ Generate CC lengkap di [chckr.cc](https://chckr.cc) atau [namso-gen.com](https:/
 ## STEP 1: Tambah Payment Method
 
 > **Navigasi:** Dashboard → **Billing** (menu kiri) → **Payment Methods**
+> **Noted**: Bebas mau nambah payment dri sini apa nanti di menu **Custome Hostname**
 
 1. Buka `https://dash.cloudflare.com/<ACCOUNT_ID>/billing/payment`
 2. Klik **Add Payment Method**
@@ -122,6 +123,7 @@ nginx -t && systemctl reload nginx
 ### Cara A — Via Web UI (gampang, TXT validation)
 
 > **Navigasi:** Klik domain → **SSL/TLS** → **Custom Hostnames**
+> **Noted**: Jika masih suruh **Enable Cloudflare Saas** klik saja, kalo sudah memasukan payment seperti **Step 1** maka akan langsung masuk ke menu **Custome Hostname**
 
 1. Klik **Add Custom Hostname**
 2. Isi:
