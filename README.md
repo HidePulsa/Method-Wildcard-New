@@ -126,6 +126,8 @@ nginx -t && systemctl reload nginx
 > **Navigasi:** Klik domain → **SSL/TLS** → **Custom Hostnames**
 > 
 > **Noted**: Jika masih suruh **Enable Cloudflare Saas** klik saja, kalo sudah memasukan payment seperti **Step 1** maka akan langsung masuk ke menu **Custome Hostname**
+>
+> Record Dns untuk fallback step sebelomnya di tambahkn di Kolom Fallback Origin di menu **Custome Hostname** jika tidak di tambahkan tidak akan mendapatkan ACM
 
 1. Klik **Add Custom Hostname**
 2. Isi:
