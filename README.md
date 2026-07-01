@@ -116,7 +116,7 @@ server {
 EOF
 
 # Test & reload
-nginx -t && systemctl reload nginx
+nginx -t && systemctl restart nginx
 ```
 
 ---
