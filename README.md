@@ -89,9 +89,11 @@ Klik **Add Fallback Origin**
 
 ## STEP 3: Setup Nginx di VPS
 
-```bash
-ssh root@<IP_VPS>
+> 1. Sediakan vps spek dan os bebas
+> 2. install nginx ( apt install nginx -y )
+> 3. Salin semua konfigurasi di bawah ini 
 
+```bash
 # Buat direktori ACME challenge
 mkdir -p /var/www/acme/.well-known/acme-challenge
 
