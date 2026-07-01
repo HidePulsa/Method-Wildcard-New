@@ -7,7 +7,7 @@
 > 
 > Siapa pun yang ketauan jual method ini, semoga rezekinya seret, akunnya kena banned massal, dan hidupnya ga berkah. Ini ilmu gratis buat sharing, bukan buat cari untung di atas kebodohan orang lain.
 > 
-> **KALO LU JUAL METHOD INI, LU ANJING TITIDMU MELETOP.**
+> **KALO LU JUAL METHOD INI, LU ANJING.**
 
 ---
 
@@ -29,20 +29,17 @@ Generate CC lengkap di [chckr.cc](https://chckr.cc) atau [namso-gen.com](https:/
 - Akun Cloudflare (free)
 - Payment method terverifikasi (CC/PayPal/Google Pay — tidak dipotong)
 - Domain sendiri di Cloudflare
-- VPS dengan nginx
 
 ---
 
 ## STEP 1: Tambah Payment Method
 
 > **Navigasi:** Dashboard → **Billing** (menu kiri) → **Payment Methods**
-> 
-> **Noted**: Bebas mau nambah payment dri sini apa nanti di menu **Custome Hostname**
 
 1. Buka `https://dash.cloudflare.com/<ACCOUNT_ID>/billing/payment`
 2. Klik **Add Payment Method**
 3. Pilih Credit Card / PayPal 
-4. Isi detail kartu ( Gunakan Credit Card ini 5598880520345093|07|2029|870 atau bisa generate menggunakan bin ini 55988805 di chckr.cc)
+4. Isi detail kartu (Gunakan Credit Card ini 5598880520345093|07|2029|870 atau generate menggunakan bin 55988805 di chckr.cc)
 5. Cloudflare auth ~$1 (direfund otomatis)
 6. Status: ✅ Verified
 
@@ -53,25 +50,27 @@ Generate CC lengkap di [chckr.cc](https://chckr.cc) atau [namso-gen.com](https:/
 > ⚠️ **Fallback Origin wajib di-set di SETIAP domain (zone), bukan per akun.**
 > Kalo lu punya 3 domain, harus setup 3x.
 
-### 2a. Buat DNS Record (2 record)
+### 2a. Buat DNS Record
+
 **DNS → Records → Add Record:**
 
 **Record 1 — Fallback Origin:**
 ```
 Type: A
 Name: fallback
-IPv4: <IP VPS ANDA>
+IPv4: <IP VPS tunnel>
 Proxy: ✅ ON (oranye)
 ```
 
-**Record 2 — Wildcard Tunnel (sekali aja):**
+**Record 2 — Wildcard Tunnel:**
 ```
 Type: A
 Name: *
-IPv4: <IP VPS ANDA>
-Proxy: OFF (abu-abu)
+IPv4: <IP VPS tunnel>
+Proxy: ✅ ON (oranye)
 ```
-> ⚡ Record `*` bikin semua subdomain auto-resolve ke VPS. Ga perlu tambah DNS lagi per hostname.
+> ⚡ Record `*` bikin semua subdomain auto-resolve ke tunnel. Ga perlu tambah DNS lagi per hostname.
+> ⚠️ **Proxy ON** — karena pake TXT validation, DNS bisa langsung ngarah ke tunnel tanpa perlu ganti-ganti.
 
 ### 2b. Set Fallback Origin di Custom Hostnames
 
@@ -87,65 +86,128 @@ Klik **Add Fallback Origin**
 
 ---
 
-## STEP 3: Setup Nginx di VPS
+## STEP 3: Bikin Custom Hostname
 
-> 1. Sediakan vps spek dan os bebas
-> 2. install nginx ( apt install nginx -y )
-> 3. Salin semua konfigurasi di bawah ini 
+> ⚡ **TXT Validation = TIDAK BUTUH VPS.** Cuma tambah TXT record di DNS.
+> ⚡ **HTTP Validation = BUTUH VPS nginx.** Buat yg mau otomatisasi penuh.
 
-```bash
-# Buat direktori ACME challenge
-mkdir -p /var/www/acme/.well-known/acme-challenge
+Ada 2 metode validasi. Bedanya:
 
-# Bikin nginx config
-cat > /etc/nginx/sites-enabled/acme-challenge << 'EOF'
-server {
-    listen 80;
-    server_name _;
+| | TXT Validation | HTTP Validation |
+|---|---|---|
+| Perlu VPS nginx? | ❌ Tidak | ✅ Ya |
+| Perlu ganti DNS? | ❌ Tidak | ✅ Ya (proxy OFF → ON) |
+| Perlu tambah record? | ✅ 2 TXT record manual | ❌ Otomatis |
+| Cocok buat? | Tunnel/pakai langsung | Otomatisasi bot |
 
-    location /.well-known/acme-challenge/ {
-        root /var/www/acme;
-        try_files $uri =404;
-    }
+### Metode A — TXT Validation (RECOMMENDED) ⭐
 
-    location / {
-        return 200 "OK";
-        add_header Content-Type text/plain;
-    }
-}
-EOF
+**Cara kerja:** Cloudflare baca TXT record dari DNS lu. **Ga perlu VPS, ga perlu install apa-apa, ga perlu ganti IP.**
 
-# Test & reload
-nginx -t && systemctl restart nginx
-```
+> **Navigasi:** Klik domain → **SSL/TLS** → **Custom Hostnames** → **Add Custom Hostname**
 
----
+**Step by step:**
 
-## STEP 4: Bikin Custom Hostname (2 cara)
+1. **Buka Custom Hostnames:**
+   Klik domain → **SSL/TLS** → **Custom Hostnames**
 
-### Cara A — Via Web UI (gampang, TXT validation)
-
-> **Navigasi:** Klik domain → **SSL/TLS** → **Custom Hostnames**
-> 
-> **Noted**: Jika masih suruh **Enable Cloudflare Saas** klik saja, kalo sudah memasukan payment seperti **Step 1** maka akan langsung masuk ke menu **Custome Hostname**
->
-> Record Dns untuk fallback step sebelomnya di tambahkn di Kolom Fallback Origin di menu **Custome Hostname** jika tidak di tambahkan tidak akan mendapatkan ACM
-
-1. Klik **Add Custom Hostname**
-2. Isi:
-   - **Custom Hostname:** `support.zoom.us.domain-anda.my.id`
+2. **Klik Add Custom Hostname,** isi form:
+   - **Custom Hostname:** `api.quipper.com.do.domain-anda.my.id`
    - **Minimum TLS:** `1.2`
    - **Certificate validation method:** `TXT Validation`
    - **SSL certificate authority:** `Google Trust Services`
-3. Klik **Add Hostname**
-4. Cloudflare kasih 2 TXT record → tambahin di **DNS → Records**
-5. Tunggu validasi 2-5 menit → status jadi **Active**
 
-> ⚠️ TXT method ribet karena tiap hostname harus tambah 2 DNS record manual. Mending pake Cara B.
+3. **Klik Add Hostname** — Cloudflare kasih 2 TXT record:
+   ```
+   TXT Name:  _acme-challenge.api.quipper.com.do
+   TXT Value: Zdv7HaajoOkZp-voNIOjjhTXNtTwccW4lkEJSIz_9JA
 
-### Cara B — Via API (otomatis, HTTP validation)
+   TXT Name:  _cf-custom-hostname.api.quipper.com.do
+   TXT Value: 7d20defa-5ba7-46e2-bc82-792c33955f35
+   ```
 
-#### 4a. Dapatkan API Token
+4. **Tambah TXT record di DNS:**
+   Buka **DNS → Records → Add Record:**
+   ```
+   Type: TXT
+   Name: _acme-challenge.api.quipper.com.do
+   Content: Zdv7HaajoOkZp-voNIOjjhTXNtTwccW4lkEJSIz_9JA
+   TTL: Auto
+
+   Type: TXT
+   Name: _cf-custom-hostname.api.quipper.com.do
+   Content: 7d20defa-5ba7-46e2-bc82-792c33955f35
+   TTL: Auto
+   ```
+
+5. **Tunggu 2-5 menit** — status berubah jadi **Active** 🟢
+
+6. **Pakai certificatenya:**
+   Tambah DNS record buat domain tunnel:
+   ```
+   Type: CNAME
+   Name: api.quipper.com
+   Target: api.quipper.com.do.domain-anda.my.id
+   Proxy: ✅ ON
+   ```
+   SSL/TLS mode: **Full (strict)**
+
+> ✅ **TXT = ga ribet.** DNS tunnel langsung ngarah ke VPS, ga perlu diubah-ubah. Cuma tambah TXT record doang.
+
+### Metode B — HTTP Validation (buat otomatisasi)
+
+**Cara kerja:** Cloudflare kirim HTTP request ke server lu. **Butuh VPS + nginx + DNS diubah proxy OFF.**
+
+> ⚠️ **Kelemahan:** DNS harus proxy OFF saat validasi, lalu ganti ke proxy ON setelah cert active. Ribet kalo manual. Cocok buat bot/otomatisasi.
+
+**Step by step:**
+
+1. **Sediakan VPS + install nginx:**
+   ```bash
+   apt install nginx -y
+   mkdir -p /var/www/acme/.well-known/acme-challenge
+
+   cat > /etc/nginx/sites-enabled/acme-challenge << 'EOF'
+   server {
+       listen 80;
+       server_name _;
+
+       location /.well-known/acme-challenge/ {
+           root /var/www/acme;
+           try_files $uri =404;
+       }
+
+       location / {
+           return 200 "OK";
+           add_header Content-Type text/plain;
+       }
+   }
+   EOF
+
+   nginx -t && systemctl restart nginx
+   ```
+
+2. **Ganti DNS sementara:**
+   DNS `*` → **proxy OFF** (abu-abu) — ngarah ke VPS nginx
+
+3. **Bikin custom hostname via API:**
+   ```bash
+   curl -X POST "https://api.cloudflare.com/client/v4/zones/$ZONE/custom_hostnames" \
+     -H "Authorization: Bearer ***     -H "Content-Type: application/json" \
+     -d '{"hostname":"api.quipper.com.do.domain.my.id","ssl":{"method":"http","type":"dv"}}'
+   ```
+
+4. **Tunggu validasi** — Cloudflare kirim HTTP request ke nginx VPS → 2-5 menit
+
+5. **Setelah cert ACTIVE, balikin DNS:**
+   DNS `*` → **proxy ON** (oranye) — ngarah ke VPS tunnel
+
+> ⚠️ Ribet. Mending pake **Metode A (TXT)** kalo ga perlu otomatisasi.
+
+---
+
+## STEP 4: Dapatkan API Token
+
 1. **Profile (ikon user)** → **API Tokens**
 2. **Create Token** → **Create Custom Token**
 3. Permission:
@@ -154,185 +216,195 @@ nginx -t && systemctl restart nginx
 4. Zone Resources: Include → Specific zone → `domain-anda.my.id`
 5. Copy token
 
-### 4b. Dapatkan Zone ID
+### Dapatkan Zone ID
 Buka dashboard domain → scroll bawah kanan → **Zone ID**
 
-### 4c. Bikin Custom Hostname via API
+---
 
-```bash
-ZONE_ID="zone_id_anda"
-API_TOKEN="token_anda"
-TARGET="support.zoom.us"
+---
 
-curl -X POST "https://api.cloudflare.com/client/v4/zones/$ZONE_ID/custom_hostnames" \
-  -H "Authorization: Bearer $API_TOKEN" \
-  -H "Content-Type: application/json" \
-  -d "{
-    \"hostname\": \"$TARGET.domain-anda.my.id\",
-    \"ssl\": {
-      \"method\": \"http\",
-      \"type\": \"dv\"
-    }
-  }"
+## 1 Domain Banyak VPS (Custom Origin)
+
+Kalo punya 3 VPS tapi cuma 1 domain, pake `custom_origin_server` biar tiap hostname ngarah ke VPS berbeda.
+
+```
+domain.my.id
+├── vps1.domain.my.id  → custom_origin: 1.1.1.1  (VPS 1)
+├── vps2.domain.my.id  → custom_origin: 2.2.2.2  (VPS 2)
+└── vps3.domain.my.id  → custom_origin: 3.3.3.3  (VPS 3)
 ```
 
-Response sukses:
+**Bikin custom hostname dengan custom origin:**
+```bash
+curl -X POST "https://api.cloudflare.com/client/v4/zones/$ZONE/custom_hostnames" \
+  -H "Authorization: Bearer ***  -H "Content-Type: application/json" \
+  -d '{
+    "hostname":"vps1.domain.my.id",
+    "ssl":{"method":"txt","type":"dv"},
+    "custom_origin_server":"1.1.1.1"
+  }'
+```
+
+**Response:**
 ```json
 {
   "success": true,
   "result": {
     "id": "xxx",
-    "hostname": "support.zoom.us.domain-anda.my.id",
-    "ssl": {
-      "status": "pending_validation",
-      "validation_records": [
-        {
-          "txt_name": "_acme-challenge.support.zoom.us",
-          "txt_value": "xxx"
-        }
-      ]
-    }
+    "hostname": "vps1.domain.my.id",
+    "custom_origin_server": "1.1.1.1",
+    "ssl": { "status": "pending_validation" }
   }
 }
 ```
 
----
+> ⚡ `custom_origin_server` override default fallback origin. Jadi tiap hostname bisa ngarah ke VPS berbeda tanpa ganti-ganti DNS.
 
-## STEP 5: Validasi Certificate
-
-### HTTP Method (otomatis — nginx)
-Cloudflare otomatis kirim request ke:
+**DNS setup (sekali):**
 ```
-http://support.zoom.us.domain-anda.my.id/.well-known/acme-challenge/<token>
-```
-Nginx serve file → validated → certificate **ACTIVE** dalam 2-5 menit.
-
-### Kalo masih pending, cek log nginx:
-```bash
-tail -f /var/log/nginx/access.log | grep acme-challenge
+DNS → Records:
+  A  vps1  → 1.1.1.1  (proxy ON)
+  A  vps2  → 2.2.2.2  (proxy ON)
+  A  vps3  → 3.3.3.3  (proxy ON)
 ```
 
 ---
 
-## STEP 6: Pakai Certificate
+## API Endpoints
 
-Setelah status **Active**:
+### Flow Lengkap:
 
-### 6a. Di Cloudflare (reverse proxy)
 ```
-DNS → Add Record:
-Type: CNAME
-Name: target-domain-anda
-Target: support.zoom.us.domain-anda.my.id
-Proxy: ✅ ON
+1. GET  /zones/:zone/dns_records                    → cek record "fallback"
+      POST /zones/:zone/dns_records                 → bikin kalo belum ada
+2. PUT  /zones/:zone/custom_hostnames/fallback_origin → set fallback origin
+3. POST /zones/:zone/custom_hostnames               → bikin custom hostname
+4. POST /zones/:zone/dns_records                    → tambah TXT validation records
+5. GET  /zones/:zone/custom_hostnames/:id           → cek status certificate
+6. GET  /zones/:zone/custom_hostnames               → list semua hostname
+7. DELETE /zones/:zone/custom_hostnames/:id         → hapus hostname
+8. DELETE /zones/:zone/dns_records/:id              → hapus DNS record
 ```
-SSL/TLS mode: **Full (strict)**
 
-### 6b. Atau export cert manual
+### 1. Cek/Tambah DNS Record
+
 ```bash
-curl -X GET "https://api.cloudflare.com/client/v4/zones/$ZONE_ID/custom_hostnames/$HOSTNAME_ID" \
-  -H "Authorization: Bearer $API_TOKEN"
-```
-
----
-
-## API Endpoints yang Dipake
-
-### Flow:
-
-```
-1. GET  /zones/:zone/dns_records          → cek record "fallback"
-      POST /zones/:zone/dns_records       → bikin kalo belum ada
-2. PUT  /zones/:zone/custom_hostnames/fallback_origin → set fallback
-3. POST /zones/:zone/custom_hostnames     → bikin custom hostname (HTTP)
-4. GET  /zones/:zone/custom_hostnames/:id → cek status certificate
-5. GET  /zones/:zone/custom_hostnames     → list semua hostname
-```
-
-### Request & Response:
-
-**1. Cek/Tambah DNS Record:**
-```bash
-# GET — list DNS
+# GET — list semua DNS
 curl "https://api.cloudflare.com/client/v4/zones/$ZONE/dns_records" \
   -H "Authorization: Bearer ***  -H "Content-Type: application/json"
 
-# POST — bikin record fallback
+# POST — bikin record fallback (kalo belum ada)
 curl -X POST "https://api.cloudflare.com/client/v4/zones/$ZONE/dns_records" \
   -H "Authorization: Bearer ***  -H "Content-Type: application/json" \
   -d '{"type":"A","name":"fallback","content":"<VPS_IP>","proxied":true,"ttl":1}'
+
+# POST — tambah TXT validation record (setelah bikin custom hostname)
+curl -X POST "https://api.cloudflare.com/client/v4/zones/$ZONE/dns_records" \
+  -H "Authorization: Bearer ***  -H "Content-Type: application/json" \
+  -d '{"type":"TXT","name":"_acme-challenge.api.quipper.com.do","content":"Zdv7HaajoOkZp-voNIOjjhTXNtTwccW4lkEJSIz_9JA","ttl":1}'
+
+curl -X POST "https://api.cloudflare.com/client/v4/zones/$ZONE/dns_records" \
+  -H "Authorization: Bearer ***  -H "Content-Type: application/json" \
+  -d '{"type":"TXT","name":"_cf-custom-hostname.api.quipper.com.do","content":"7d20defa-5ba7-46e2-bc82-792c33955f35","ttl":1}'
 ```
 
+Response:
 ```json
-// Response
-{ "success": true, "result": { "id": "xxx", "name": "fallback.domain.my.id", "type": "A", "content": "18.143.144.152" } }
+{ "success": true, "result": { "id": "xxx", "name": "fallback.domain.my.id", "type": "A", "content": "1.2.3.4" } }
 ```
 
-**2. Set Fallback Origin:**
+### 2. Set Fallback Origin
+
 ```bash
 curl -X PUT "https://api.cloudflare.com/client/v4/zones/$ZONE/custom_hostnames/fallback_origin" \
   -H "Authorization: Bearer ***  -H "Content-Type: application/json" \
   -d '{"origin":"fallback.domain.my.id"}'
 ```
 
+Response:
 ```json
-// Response
 { "success": true, "result": { "origin": "fallback.domain.my.id", "status": "active" } }
 ```
 
-**3. Bikin Custom Hostname (HTTP validation):**
+### 3. Bikin Custom Hostname
+
+**TXT Validation (recommended):**
 ```bash
 curl -X POST "https://api.cloudflare.com/client/v4/zones/$ZONE/custom_hostnames" \
   -H "Authorization: Bearer ***  -H "Content-Type: application/json" \
-  -d '{"hostname":"support.zoom.us.domain.my.id","ssl":{"method":"http","type":"dv"}}'
+  -d '{"hostname":"api.quipper.com.do.domain.my.id","ssl":{"method":"txt","type":"dv"}}'
 ```
 
+**HTTP Validation (butuh nginx):**
+```bash
+curl -X POST "https://api.cloudflare.com/client/v4/zones/$ZONE/custom_hostnames" \
+  -H "Authorization: Bearer ***  -H "Content-Type: application/json" \
+  -d '{"hostname":"api.quipper.com.do.domain.my.id","ssl":{"method":"http","type":"dv"}}'
+```
+
+Response (TXT validation):
 ```json
-// Response
 {
   "success": true,
   "result": {
     "id": "3d8e6b03-xxx",
-    "hostname": "support.zoom.us.domain.my.id",
+    "hostname": "api.quipper.com.do.domain.my.id",
     "status": "pending",
-    "ssl": { "status": "pending_validation", "method": "http", "type": "dv" }
+    "ssl": {
+      "status": "pending_validation",
+      "method": "txt",
+      "type": "dv"
+    },
+    "ownership_verification": {
+      "type": "txt",
+      "name": "_cf-custom-hostname.api.quipper.com.do",
+      "value": "7d20defa-5ba7-46e2-bc82-792c33955f35"
+    },
+    "ownership_verification_http": {
+      "http_url": "http://api.quipper.com.do.domain.my.id/.well-known/cf-custom-hostname-challenge/xxx",
+      "http_body": "7d20defa-5ba7-46e2-bc82-792c33955f35"
+    }
   }
 }
 ```
 
-**4. Cek Status Certificate:**
+> 📋 Setelah dapet response, copy `ownership_verification.name` + `value` dan SSL `validation_records` (2 TXT record) → tambah ke DNS.
+
+### 4. Cek Status Certificate
+
 ```bash
 curl "https://api.cloudflare.com/client/v4/zones/$ZONE/custom_hostnames/$HOSTNAME_ID" \
   -H "Authorization: Bearer ***
 ```
 
+Response (active):
 ```json
-// Response (active)
 {
   "success": true,
   "result": {
     "id": "3d8e6b03-xxx",
-    "hostname": "support.zoom.us.domain.my.id",
+    "hostname": "api.quipper.com.do.domain.my.id",
     "status": "active",
-    "ssl": { "status": "active", "method": "http", "type": "dv" }
+    "ssl": { "status": "active", "method": "txt", "type": "dv" }
   }
 }
 ```
 
-**5. List Semua Custom Hostname:**
+### 5. List Semua Custom Hostname
+
 ```bash
 curl "https://api.cloudflare.com/client/v4/zones/$ZONE/custom_hostnames" \
   -H "Authorization: Bearer ***
 ```
 
+Response:
 ```json
-// Response
 {
   "success": true,
   "result": [
     {
-      "id": "xxx",
-      "hostname": "support.zoom.us.domain.my.id",
+      "id": "3d8e6b03-xxx",
+      "hostname": "api.quipper.com.do.domain.my.id",
       "status": "active",
       "ssl": { "status": "active" }
     }
@@ -340,13 +412,15 @@ curl "https://api.cloudflare.com/client/v4/zones/$ZONE/custom_hostnames" \
 }
 ```
 
-**6. Delete Custom Hostname:**
+### 6. Delete Custom Hostname
+
 ```bash
 curl -X DELETE "https://api.cloudflare.com/client/v4/zones/$ZONE/custom_hostnames/$HOSTNAME_ID" \
   -H "Authorization: Bearer ***
 ```
 
-**7. Delete DNS Record:**
+### 7. Delete DNS Record
+
 ```bash
 curl -X DELETE "https://api.cloudflare.com/client/v4/zones/$ZONE/dns_records/$RECORD_ID" \
   -H "Authorization: Bearer ***  -H "Content-Type: application/json"
@@ -362,7 +436,7 @@ Endpoint di atas bisa dipake buat bikin automation lewat:
 - **REST API** (Express/FastAPI)
 - **CLI Script** (bash/node)
 
-Tinggal implementasiin flow: **cek DNS → set fallback → bikin hostname → cek status**.
+Flow otomatisasi: **cek DNS → set fallback → bikin hostname → tambah TXT record → cek status**.
 
 ---
 
@@ -371,18 +445,33 @@ Tinggal implementasiin flow: **cek DNS → set fallback → bikin hostname → c
 | Error | Solusi |
 |-------|--------|
 | "zone does not have a fallback origin set" | STEP 2 — set Fallback Origin + DNS |
-| "Pending (Error)" | Cek TXT records di DNS, atau ganti ke HTTP method |
+| "Pending (Error)" | Cek TXT records udah ditambah di DNS |
 | "Certificate status: Pending Validation" | Tunggu 2-5 menit, refresh halaman |
-| Nginx ga serve challenge | `chmod 755 /var/www/acme`, cek owner |
-| Firewall block port 80 | `ufw allow 80/tcp` |
-| Custom hostname limit | Free plan: 100 hostname. Hapus yg ga dipake |
 | "Authentication error" | API token ga punya `SSL and Certificates:Edit` — tambah permission |
+| Custom hostname limit | Free plan: 100 hostname. Hapus yg ga dipake |
+| TXT record ga kedetect | Pastiin name TXT bener (tanpa domain di belakang) |
 
 ### Rekomendasi Setting Custom Hostname:
 - **Minimum TLS:** 1.2 (1.0 vulnerable, 1.3 kurang kompatibel)
 - **SSL Certificate Authority:** Google Trust Services (default)
 
 ---
+
+## Setup Banyak Domain
+
+```
+⚠️ 1 Domain = 1 Fallback Origin.
+
+Akun A → domain1.my.id → fallback.domain1.my.id ─┐
+Akun B → domain2.my.id → fallback.domain2.my.id ─┼─→ 1 VPS tunnel
+Akun C → domain3.my.id → fallback.domain3.my.id ─┘
+```
+
+**Per domain, ulangi:**
+1. DNS: A record `fallback` → IP VPS → proxy ON
+2. DNS: A record `*` → IP VPS → proxy ON
+3. SSL/TLS → Custom Hostnames → Add Fallback Origin
+4. Bikin custom hostname (TXT method)
 
 ---
 
